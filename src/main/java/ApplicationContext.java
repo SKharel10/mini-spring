@@ -11,7 +11,7 @@ public class ApplicationContext {
 
     public void register(Class<?> clazz) throws Exception {
 
-        if (!clazz.isAnnotationPresent(Component.class)) {
+        if (!clazz.isAnnotationPresent(Component.class) || beans.containsKey(clazz)) {
             return;
         }
 
