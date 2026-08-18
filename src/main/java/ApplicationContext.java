@@ -10,6 +10,11 @@ public class ApplicationContext {
     }
 
     public void register(Class<?> clazz) throws Exception {
+
+        if (!clazz.isAnnotationPresent(Component.class)) {
+            return;
+        }
+
         Constructor<?> constructor = clazz.getConstructor();
         Object object = constructor.newInstance();
         beans.put(clazz, object);
@@ -19,6 +24,5 @@ public class ApplicationContext {
         Object object = beans.get(clazz);
         return clazz.cast(object);
     }
-
 
 }
