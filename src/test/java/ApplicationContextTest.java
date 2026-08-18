@@ -17,4 +17,27 @@ class ApplicationContextTest {
         assertNull(applicationContext.getBean(UnannotatedClass.class));
     }
 
+    @Test
+    public void sameBeanIsRetrievedWhenRetrievingMultipleTimes() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext();
+        applicationContext.register(Book.class);
+
+        Book book1 = applicationContext.getBean(Book.class);
+        Book book2 = applicationContext.getBean(Book.class);
+
+        assertSame(book1, book2);
+    }
+
+    @Test
+    public void registeringSameComponentTwiceDoesNotCreateNewInstance() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext();
+        applicationContext.register(Book.class);
+        Book book1 = applicationContext.getBean(Book.class);
+        applicationContext.register(Book.class);
+        Book book2 = applicationContext.getBean(Book.class);
+
+        assertSame(book1, book2);
+    }
+
+
 }
