@@ -1,3 +1,5 @@
+package com.project.minispring;
+
 @Component
 public class Book {
     private Author author;
