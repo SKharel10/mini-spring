@@ -1,3 +1,5 @@
+package com.project.minispring;
+
 @Component
 public class TestComponent {
     private NonComponentDependency dependency;
