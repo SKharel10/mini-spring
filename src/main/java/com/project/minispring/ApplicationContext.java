@@ -1,13 +1,14 @@
 package com.project.minispring;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ApplicationContext {
     private Class<?> main;
@@ -35,7 +36,7 @@ public class ApplicationContext {
         return clazz.cast(object);
     }
 
-    public Object[] resolveDependencies(Class<?> clazz) throws Exception {
+    private Object[] resolveDependencies(Class<?> clazz) throws Exception {
         // No-arg constructor -> just return null, no dependencies needed.
         if (clazz.getConstructors()[0].getParameterCount() == 0) {
             return new Object[0];
@@ -74,20 +75,28 @@ public class ApplicationContext {
         }
     }
 
-    public List<Class<?>> getClasses() throws ClassNotFoundException, IOException {
-        String packageName = main.getPackageName();
-
-        ClassLoader classLoader = main.getClassLoader();
-        InputStream resourcesStream = classLoader.getResourceAsStream(packageName.replace(".", "/"));
-        String resources = new String(resourcesStream.readAllBytes());
-
+    public List<Class<?>> getClasses() throws ClassNotFoundException, IOException, URISyntaxException {
         List<Class<?>> classes = new ArrayList<>();
-        for (String resource: resources.split("\n")) {
-            String classPath = packageName + "." + resource.replace(".class", "");
-            classes.add(Class.forName(classPath));
-        }
-
+        collectClasses(main.getPackageName(), classes);
         return classes;
+
     }
 
+    public void collectClasses(String packageName, List<Class<?>> classes) throws URISyntaxException, ClassNotFoundException {
+        ClassLoader classLoader = main.getClassLoader();
+        URL url = classLoader.getResource(packageName.replace(".", "/"));
+        if (url == null) return;
+        File file = new File(url.toURI());
+        File[] files = file.listFiles();
+
+        for (File currentFile : files) {
+            if (currentFile.isDirectory()) {
+                collectClasses(packageName + "." + currentFile.getName(), classes);
+            } else if (currentFile.getName().endsWith(".class")) {
+                String currentFileName = packageName + "." + currentFile.getName().replace(".class", "");
+                Class<?> clazz = Class.forName(currentFileName);
+                classes.add(clazz);
+            }
+        }
+    }
 }

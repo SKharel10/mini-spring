@@ -1,4 +1,4 @@
-package com.project.minispring;
+package testcomponents.basic;
 
 public class UnannotatedClass {
 }

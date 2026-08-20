@@ -1,4 +1,4 @@
-package testcomponents.invalid;
+package invalidtestcomponents;
 import com.project.minispring.Component;
 
 @Component
