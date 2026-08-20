@@ -1,4 +1,4 @@
-package testcomponents.invalid;
+package invalidtestcomponents;
 
 public class NonComponentDependency {
 }
