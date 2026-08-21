@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.MappedByteBuffer;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -49,6 +50,28 @@ public class ApplicationContext {
             if (beans.containsKey(dependencyTypes[i])){
                 dependencies[i] = beans.get(dependencyTypes[i]);
             } else {
+                if (dependencyTypes[i].isInterface()) {
+                    Class<?> interfaceImplementation = null;
+
+                    for (Class<?> currentClass : getClasses()) {
+                        if (Arrays.asList(currentClass.getInterfaces()).contains(dependencyTypes[i])) {
+                            interfaceImplementation = currentClass;
+                        }
+                    }
+
+                    if (interfaceImplementation == null) {
+                        throw new IllegalStateException("Interface dependency: " + dependencyTypes[i].getName() + " has no implementation");
+                    }
+
+                    if (beans.get(interfaceImplementation) == null) {
+                        assert interfaceImplementation != null;
+                        register(interfaceImplementation);
+                    }
+
+                    dependencies[i] = beans.get(interfaceImplementation);
+                    continue;
+                }
+
                 register(dependencyTypes[i]);
                 // Edge case: dependency isn't annotated as com.project.minispring.Component.
                 Object dependency = beans.get(dependencyTypes[i]);
