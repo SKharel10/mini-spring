@@ -1,13 +1,17 @@
 import com.project.minispring.*;
+import invalidtestcomponents.ComponentWithMissingInterfaceDependency;
 import org.junit.jupiter.api.Test;
 import testcomponents.TestApplication;
 import testcomponents.basic.Author;
 import testcomponents.basic.UnannotatedClass;
 import testcomponents.injection.Book;
 import invalidtestcomponents.ComponentWithNonComponentDependency;
-import testcomponents.injection.InMemoryRepository;
-import testcomponents.injection.LibraryService;
+import testcomponents.interfaceresolution.InMemoryRepository;
+import testcomponents.interfaceresolution.LibraryService;
 import testcomponents.recursive.deeper.DeepComponent;
+import testcomponents.recursive.deeper.DeepComponentDependency;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,7 +136,7 @@ class ApplicationContextTest {
         ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
         applicationContext.scanComponents();
         // Deeply nested within recursive -> deeper -> DeepComponent.class
-        assertNotNull(applicationContext.getBean(DeepComponent.class));
+        assertNotNull(applicationContext.getBean(DeepComponentDependency.class));
     }
 
     @Test
@@ -147,9 +151,40 @@ class ApplicationContextTest {
         ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
         applicationContext.scanComponents();
 
-        LibraryService libraryService = applicationContext.getBean(LibraryService.class);
-        assertInstanceOf(InMemoryRepository.class, libraryService.getInMemoryRepository());
+        DeepComponent component = applicationContext.getBean(DeepComponent.class);
+        assertInstanceOf(DeepComponentDependency.class, component.getDependency());
     }
 
+    @Test
+    public void interfaceDependencyIsResolved() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
+        applicationContext.scanComponents();
 
+        assertNotNull(applicationContext.getBean(LibraryService.class));
+    }
+
+    @Test
+    public void interfaceImplementationIsInjected() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
+        applicationContext.scanComponents();
+
+        LibraryService libraryService = applicationContext.getBean(LibraryService.class);
+        assertInstanceOf(InMemoryRepository.class, libraryService.getRepository());
+    }
+
+    @Test
+    public void implementationIsRegisteredAsBean() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
+        applicationContext.scanComponents();
+
+        LibraryService libraryService = applicationContext.getBean(LibraryService.class);
+
+        assertSame(libraryService.getRepository(), applicationContext.getBean(InMemoryRepository.class));
+    }
+
+    @Test
+    public void throwsWhenNoImplementationExists() throws Exception {
+        ApplicationContext applicationContext = new ApplicationContext(TestApplication.class);
+        assertThrows(IllegalStateException.class, () -> applicationContext.register(ComponentWithMissingInterfaceDependency.class));
+    }
 }
